@@ -1,6 +1,6 @@
 ###################################################
 # Stage: base
-# 
+#
 # This base stage ensures all other stages are using the same base image
 # and provides common configuration for all stages, such as the working dir.
 ###################################################
@@ -16,12 +16,11 @@ WORKDIR /usr/local/app
 # since there are common steps needed for each.
 ###################################################
 FROM base AS client-base
-COPY client/package.json client/yarn.lock ./    # Ensure these files are in the right location
+WORKDIR /usr/local/app  # Ensure the working directory exists
+COPY client/package.json client/yarn.lock ./
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install
-
-# Uncomment and add missing files:
-COPY client/.eslintrc.cjs client/index.html client/vite.config.js ./  # Ensure these files are copied
+# COPY client/.eslintrc.cjs client/index.html client/vite.config.js ./ 
 COPY client/public ./public
 COPY client/src ./src
 
@@ -43,7 +42,6 @@ CMD ["yarn", "dev"]
 FROM client-base AS client-build
 RUN yarn build
 
-
 ###################################################
 ################  BACKEND STAGES  #################
 ###################################################
@@ -55,7 +53,8 @@ RUN yarn build
 # there are common steps needed for each.
 ###################################################
 FROM base AS backend-dev
-COPY backend/package.json backend/yarn.lock ./  
+WORKDIR /usr/local/app  # Ensure the working directory exists
+COPY backend/package.json backend/yarn.lock ./
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install --frozen-lockfile
 COPY backend/spec ./spec
@@ -83,6 +82,7 @@ RUN yarn test
 ###################################################
 FROM base AS final
 ENV NODE_ENV=production
+WORKDIR /usr/local/app  # Ensure the working directory exists
 COPY --from=test /usr/local/app/package.json /usr/local/app/yarn.lock ./
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install --production --frozen-lockfile
