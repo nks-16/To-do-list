@@ -20,7 +20,6 @@ WORKDIR /usr/local/app  # Ensure the working directory exists
 COPY client/package.json client/yarn.lock ./
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install
-# COPY client/.eslintrc.cjs client/index.html client/vite.config.js ./ 
 COPY client/public ./public
 COPY client/src ./src
 
@@ -40,7 +39,7 @@ CMD ["yarn", "dev"]
 # JS files that can be served by the backend.
 ###################################################
 FROM client-base AS client-build
-RUN yarn build
+RUN yarn build  # Ensure that index.html and other assets are being found correctly
 
 ###################################################
 ################  BACKEND STAGES  #################
@@ -53,7 +52,7 @@ RUN yarn build
 # there are common steps needed for each.
 ###################################################
 FROM base AS backend-dev
-WORKDIR /usr/local/app  # Ensure the working directory exists
+WORKDIR /usr/local/app
 COPY backend/package.json backend/yarn.lock ./
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install --frozen-lockfile
