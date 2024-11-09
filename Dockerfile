@@ -1,6 +1,6 @@
 ###################################################
 # Stage: base
-#
+# 
 # This base stage ensures all other stages are using the same base image
 # and provides common configuration for all stages, such as the working dir.
 ###################################################
@@ -16,10 +16,10 @@ WORKDIR /usr/local/app
 # since there are common steps needed for each.
 ###################################################
 FROM base AS client-base
-WORKDIR /usr/local/app  # Ensure the working directory exists
 COPY client/package.json client/yarn.lock ./
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install
+COPY client/index.html client/vite.config.js ./
 COPY client/public ./public
 COPY client/src ./src
 
@@ -39,7 +39,10 @@ CMD ["yarn", "dev"]
 # JS files that can be served by the backend.
 ###################################################
 FROM client-base AS client-build
-RUN yarn build  # Ensure that index.html and other assets are being found correctly
+RUN yarn build
+
+
+
 
 ###################################################
 ################  BACKEND STAGES  #################
@@ -52,7 +55,6 @@ RUN yarn build  # Ensure that index.html and other assets are being found correc
 # there are common steps needed for each.
 ###################################################
 FROM base AS backend-dev
-WORKDIR /usr/local/app
 COPY backend/package.json backend/yarn.lock ./
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install --frozen-lockfile
@@ -81,7 +83,6 @@ RUN yarn test
 ###################################################
 FROM base AS final
 ENV NODE_ENV=production
-WORKDIR /usr/local/app  # Ensure the working directory exists
 COPY --from=test /usr/local/app/package.json /usr/local/app/yarn.lock ./
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install --production --frozen-lockfile
