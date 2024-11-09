@@ -16,10 +16,12 @@ WORKDIR /usr/local/app
 # since there are common steps needed for each.
 ###################################################
 FROM base AS client-base
-COPY client/package.json client/yarn.lock ./
+COPY client/package.json client/yarn.lock ./    # Ensure these files are in the right location
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install
-# COPY client/.eslintrc.cjs client/index.html client/vite.config.js ./
+
+# Uncomment and add missing files:
+COPY client/.eslintrc.cjs client/index.html client/vite.config.js ./  # Ensure these files are copied
 COPY client/public ./public
 COPY client/src ./src
 
@@ -42,8 +44,6 @@ FROM client-base AS client-build
 RUN yarn build
 
 
-
-
 ###################################################
 ################  BACKEND STAGES  #################
 ###################################################
@@ -55,7 +55,7 @@ RUN yarn build
 # there are common steps needed for each.
 ###################################################
 FROM base AS backend-dev
-COPY backend/package.json backend/yarn.lock ./
+COPY backend/package.json backend/yarn.lock ./  
 RUN --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
     yarn install --frozen-lockfile
 COPY backend/spec ./spec
